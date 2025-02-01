@@ -1,0 +1,36 @@
+{
+    "name": "Google Keyword Scraper",
+    "version": "1.0.0",
+    "manifest_version": 3,
+    "description": "キーワードのGoogle検索結果を解析し、Q&A/ブログ/SNSなどの出現状況を調査するChrome拡張機能。",
+    "permissions": [
+      "activeTab",
+      "scripting",
+      "tabs",
+      "storage",
+      "notifications",
+      "webRequest"
+    ],
+    "host_permissions": [
+      "*://*.google.com/*",
+      "https://hooks.slack.com/*"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "action": {
+      "default_popup": "popup.html",
+      "show_matches": ["*://www.google.com/search?*"]
+    },
+    "content_scripts": [
+      {
+        "matches": ["*://*.google.com/*"],
+        "js": [
+          "constants.js",
+          "recaptcha.js",
+          "contentScript.js"
+        ]
+      }
+    ]
+  }
+  

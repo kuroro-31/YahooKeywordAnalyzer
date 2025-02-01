@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>キーワード分析</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 16px;
+      width: 320px;
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+    }
+    textarea {
+      width: 100%;
+      height: 120px;
+      background-color: #2d2d2d;
+      color: #e0e0e0;
+      border: 1px solid #404040;
+      border-radius: 4px;
+      padding: 12px;
+      margin: 8px 0;
+      box-sizing: border-box;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #0078d4;
+    }
+    button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px 10px;
+      background-color: #0078d4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #106ebe;
+    }
+    #status {
+      margin: 16px 0;
+      color: #e0e0e0;
+      font-size: 0.9em;
+      white-space: pre-wrap;
+      padding: 8px;
+      background-color: #2d2d2d;
+      border-radius: 4px;
+      display: none;
+    }
+    #status:not(:empty) {
+      display: block;
+    }
+    #results-container {
+      margin: 16px 0;
+      border: 1px solid #404040;
+      padding: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 0.85em;
+      background: #2d2d2d;
+      border-radius: 4px;
+      display: none;
+    }
+    #results-container:not(:empty) {
+      display: block;
+    }
+    #csv-preview {
+      max-height: 120px;
+      overflow-y: auto;
+      border: 1px solid #404040;
+      padding: 12px;
+      margin: 16px 0;
+      font-family: monospace;
+      white-space: pre;
+      background-color: #2d2d2d;
+      color: #e0e0e0;
+      border-radius: 4px;
+    }
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    
+    .button-group button {
+      flex: 1;
+      margin-top: 0;
+    }
+
+    #clearKeywordsBtn, #clear-results-btn {
+      background-color: #d83b01;
+    }
+
+    #clearKeywordsBtn:hover, #clear-results-btn:hover {
+      background-color: #c43601;
+    }
+
+    .settings-toggle {
+      text-align: right;
+      margin: 16px 0;
+    }
+
+    .settings-toggle a {
+      color: #0078d4;
+      text-decoration: none;
+      font-size: 0.9em;
+      padding: 4px 8px;
+    }
+
+    .settings-section {
+      margin: 16px 0;
+      padding: 16px;
+      background-color: #2d2d2d;
+      border-radius: 4px;
+      border: 1px solid #404040;
+    }
+
+    .settings-section input {
+      width: 100%;
+      margin-bottom: 12px;
+      padding: 10px;
+      background-color: #2d2d2d;
+      color: #e0e0e0;
+      border: 1px solid #404040;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .settings-section input:focus {
+      outline: none;
+      border-color: #0078d4;
+    }
+
+    h3, h4 {
+      color: #e0e0e0;
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: #cccccc;
+      margin: 8px 0;
+    }
+
+    .header-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    #analysis-status {
+      position: static;
+      background-color: #0078d4;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      display: none;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    #analysis-status.active {
+      display: inline-block;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header-container">
+    <h3>キーワード分析ツール</h3>
+    <div id="analysis-status">分析中...</div>
+  </div>
+  <p>1行に1キーワードを入力</p>
+  <textarea id="keywordInput"></textarea>
+  <div class="button-group">
+    <button id="startBtn">分析開始(Command+Enter)</button>
+    <button id="clearKeywordsBtn" style="background-color: #ff4444;">キーワードをクリア</button>
+  </div>
+
+  <div id="status"></div>
+  <div id="results-container"></div>
+  <div id="csv-preview"></div>
+  <button id="copy-csv-btn">CSVをコピー</button>
+  <button id="clear-results-btn" style="background-color: #ff4444;">結果をクリア</button>
+
+  <div class="settings-toggle" style="text-align: right; margin: 10px 0;">
+    <a href="#" id="toggleSettings" style="font-size: 0.8em; color: #666; text-decoration: none;">Slack設定を表示</a>
+  </div>
+
+  <div class="settings-section" style="display: none;">
+    <h4>Slack設定</h4>
+    <input 
+      type="text" 
+      id="slackWebhookUrl" 
+      placeholder="Slack Webhook URL"
+      style="width: 100%; margin-bottom: 5px; padding: 5px;"
+    />
+    <button 
+      id="saveSlackUrl"
+      style="width: auto; padding: 5px 10px; margin-bottom: 10px;"
+    >保存</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

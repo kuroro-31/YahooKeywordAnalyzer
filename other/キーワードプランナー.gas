@@ -1,0 +1,107 @@
+// メニューを追加する関数
+function onOpen() {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var menuItems = [
+    { name: '1行目から5行目を削除', functionName: 'deleteFirstFiveRows' },
+    { name: 'B列とC列を削除', functionName: 'deleteColumnsBAndC' },
+    { name: 'D列を削除', functionName: 'deleteColumnD' },
+    { name: 'E~G列を削除', functionName: 'deleteColumnsEtoG' },
+    { name: 'B列の値が空白の行を削除', functionName: 'deleteBlankRowsInB' },
+    { name: 'C列が-の値の行を削除', functionName: 'deleteRowsWithMinusInC' },
+    { name: 'B列が500以外の行を削除', functionName: 'deleteRowsNot500InB' },
+    { name: '全ての削除を実行', functionName: 'deleteAll' }
+  ];
+  spreadsheet.addMenu('カスタムメニュー', menuItems);
+}
+
+// 1行目から5行目を削除する関数
+function deleteFirstFiveRows() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  sheet.deleteRows(1, 5);
+  SpreadsheetApp.flush(); // 変更を即時反映
+}
+
+// B列とC列を削除する関数
+function deleteColumnsBAndC() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  // 列Cを先に削除しないと、列Bが列Cに移動してしまうため、後ろの列から削除します
+  sheet.deleteColumn(3); // C列を削除
+  sheet.deleteColumn(2); // B列を削除
+  SpreadsheetApp.flush(); // 変更を即時反映
+}
+
+// D列を削除する関数
+function deleteColumnD() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  sheet.deleteColumn(4); // D列を削除
+  SpreadsheetApp.flush(); // 変更を即時反映
+}
+
+// E~G列を削除する関数
+function deleteColumnsEtoG() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  // 列Gを先に削除しないと、列Eが列Fに移動してしまうため、後ろの列から削除します
+  sheet.deleteColumn(7); // G列を削除
+  sheet.deleteColumn(6); // F列を削除
+  sheet.deleteColumn(5); // E列を削除
+  SpreadsheetApp.flush(); // 変更を即時反映
+}
+
+// B列の値が空白の行を削除する関数
+function deleteBlankRowsInB() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var range = sheet.getRange("B:B");
+  var values = range.getValues();
+  // 下から上に向かって削除しないと行番号がずれる
+  for (var i = values.length - 1; i >= 0; i--) {
+    if (values[i][0] === "") {
+      sheet.deleteRow(i + 1);
+    }
+  }
+  SpreadsheetApp.flush(); // 変更を即時反映
+}
+
+// C列が-の値の行を削除する関数
+function deleteRowsWithMinusInC() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var range = sheet.getRange("C:C");
+  var values = range.getValues();
+  // 下から上に向かって削除しないと行番号がずれる
+  for (var i = values.length - 1; i >= 0; i--) {
+    if (values[i][0].toString().includes("-")) {
+      sheet.deleteRow(i + 1);
+    }
+  }
+  SpreadsheetApp.flush(); // 変更を即時反映
+}
+
+// B列が500以外の行を削除する関数
+function deleteRowsNot500InB() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 1) return;
+  var range = sheet.getRange(1, 2, lastRow, 1); // B列の範囲を取得
+  var values = range.getValues();
+  
+  for (var i = lastRow - 1; i >= 0; i--) {
+    var cellValue = values[i][0];
+    var numericValue = parseFloat(cellValue);
+    Logger.log("Row " + (i + 1) + " B: " + numericValue);
+    
+    if (isNaN(numericValue) || numericValue !== 500) {
+      sheet.deleteRow(i + 1);
+    }
+  }
+  SpreadsheetApp.flush(); // 変更を即時反映
+}
+
+// 全ての削除を順番に実行する関数
+function deleteAll() {
+  deleteFirstFiveRows();
+  deleteColumnsBAndC();
+  deleteColumnD();
+  deleteColumnsEtoG();
+  deleteBlankRowsInB();
+  deleteRowsWithMinusInC();
+  deleteRowsNot500InB();
+}
